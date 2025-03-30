@@ -609,17 +609,41 @@ class TriggerType(str, Enum):
         <ActionType.BLOCK: 'BLOCK'>
     """
 
-    TEXT_INPUT = ("TEXT_INPUT", OutputType.INPUT, ActionType.TEXT)
+    TEXT_INPUT = (
+        "TEXT_INPUT",
+        OutputType.INPUT,
+        ActionType.TEXT,
+    )
     CARD_BUTTON_MESSAGE = (
         "CARD_BUTTON_MESSAGE",
         OutputType.CARD_BUTTON,
         ActionType.MESSAGE,
     )
-    CARD_BUTTON_BLOCK = ("CARD_BUTTON_BLOCK", OutputType.CARD_BUTTON, ActionType.BLOCK)
-    LIST_ITEM_MESSAGE = ("LIST_ITEM_MESSAGE", OutputType.LIST_ITEM, ActionType.MESSAGE)
-    LIST_ITEM_BLOCK = ("LIST_ITEM_BLOCK", OutputType.LIST_ITEM, ActionType.BLOCK)
-    LISTMENU_MESSAGE = ("LISTMENU_MESSAGE", OutputType.LISTMENU, ActionType.MESSAGE)
-    LISTMENU_BLOCK = ("LISTMENU_BLOCK", OutputType.LISTMENU, ActionType.BLOCK)
+    CARD_BUTTON_BLOCK = (
+        "CARD_BUTTON_BLOCK",
+        OutputType.CARD_BUTTON,
+        ActionType.BLOCK,
+    )
+    LIST_ITEM_MESSAGE = (
+        "LIST_ITEM_MESSAGE",
+        OutputType.LIST_ITEM,
+        ActionType.MESSAGE,
+    )
+    LIST_ITEM_BLOCK = (
+        "LIST_ITEM_BLOCK",
+        OutputType.LIST_ITEM,
+        ActionType.BLOCK,
+    )
+    LISTMENU_MESSAGE = (
+        "LISTMENU_MESSAGE",
+        OutputType.LISTMENU,
+        ActionType.MESSAGE,
+    )
+    LISTMENU_BLOCK = (
+        "LISTMENU_BLOCK",
+        OutputType.LISTMENU,
+        ActionType.BLOCK,
+    )
     QUICKREPLY_BUTTON_MESSAGE = (
         "QUICKREPLY_BUTTON_MESSAGE",
         OutputType.QUICKREPLY,
