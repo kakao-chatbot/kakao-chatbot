@@ -16,6 +16,7 @@ classes:
 """
 
 import json
+from enum import Enum
 from typing import Optional, Union, List, Dict
 
 from .base import ParentPayload
@@ -175,7 +176,7 @@ class Action(ParentPayload):
             key: Param.from_dict(value)
             for key, value in data.get("detailParams", {}).items()
         }
-        client_extra = data["clientExtra"]
+        client_extra = data.get("clientExtra", {})
         return cls(
             ID=ID,
             name=name,
@@ -296,9 +297,9 @@ class IntentExtra(ParentPayload):
     """
 
     def __init__(
-          self,
-          reason: Optional[dict] = None,
-          matched_knowledges: Optional[list[Knowledge]] = None
+        self,
+        reason: Optional[dict] = None,
+        matched_knowledges: Optional[list[Knowledge]] = None,
     ):
         """IntentExtra 클래스의 인스턴스를 초기화합니다.
 
@@ -551,6 +552,272 @@ class UserRequest(ParentPayload):
             params=params,
             callback_url=callback_url,
         )
+
+
+class OutputType(str, Enum):
+    """카카오 챗봇 트리거의 출력 유형입니다.
+
+    챗봇 구성 요소에서 사용자 입력 또는 버튼/카드 등의 출력 방식에 해당합니다.
+
+    - INPUT: 일반 텍스트 입력
+    - CARD_BUTTON: 일반 카드 버튼
+    - LIST_ITEM: 리스트 카드 항목
+    - LISTMENU: 리스트 메뉴 버튼
+    - QUICKREPLY: 바로연결 버튼
+    """
+
+    INPUT = "INPUT"
+    CARD_BUTTON = "CARD_BUTTON"
+    LIST_ITEM = "LIST_ITEM"
+    LISTMENU = "LISTMENU"
+    QUICKREPLY = "QUICKREPLY"
+
+
+class ActionType(str, Enum):
+    """카카오 챗봇 트리거의 동작 유형입니다.
+
+    버튼 클릭 또는 입력 후 실행되는 동작의 목적에 해당합니다.
+
+    - TEXT: 사용자의 텍스트 입력
+    - MESSAGE: 메시지 전송
+    - BLOCK: 다른 블록 호출
+    """
+
+    TEXT = "TEXT"
+    MESSAGE = "MESSAGE"
+    BLOCK = "BLOCK"
+
+
+class TriggerType(str, Enum):
+    """카카오 챗봇에서 사용자 발화를 발생시킨 트리거 유형입니다.
+
+    TriggerType은 OutputType과 ActionType의 조합으로 구성되며,
+    실제 발화를 유발한 원인을 표현합니다.
+
+    각 항목은 다음 정보를 포함합니다:
+        - value: 문자열로 표현된 트리거 유형 (e.g., 'CARD_BUTTON_BLOCK')
+        - output_type: 출력 방식 (OutputType Enum)
+        - action_type: 동작 방식 (ActionType Enum)
+
+    Examples:
+        >>> t = TriggerType.CARD_BUTTON_BLOCK
+        >>> t.value
+        'CARD_BUTTON_BLOCK'
+        >>> t.output_type
+        <OutputType.CARD_BUTTON: 'CARD_BUTTON'>
+        >>> t.action_type
+        <ActionType.BLOCK: 'BLOCK'>
+    """
+
+    TEXT_INPUT = ("TEXT_INPUT", OutputType.INPUT, ActionType.TEXT)
+    CARD_BUTTON_MESSAGE = (
+        "CARD_BUTTON_MESSAGE",
+        OutputType.CARD_BUTTON,
+        ActionType.MESSAGE,
+    )
+    CARD_BUTTON_BLOCK = ("CARD_BUTTON_BLOCK", OutputType.CARD_BUTTON, ActionType.BLOCK)
+    LIST_ITEM_MESSAGE = ("LIST_ITEM_MESSAGE", OutputType.LIST_ITEM, ActionType.MESSAGE)
+    LIST_ITEM_BLOCK = ("LIST_ITEM_BLOCK", OutputType.LIST_ITEM, ActionType.BLOCK)
+    LISTMENU_MESSAGE = ("LISTMENU_MESSAGE", OutputType.LISTMENU, ActionType.MESSAGE)
+    LISTMENU_BLOCK = ("LISTMENU_BLOCK", OutputType.LISTMENU, ActionType.BLOCK)
+    QUICKREPLY_BUTTON_MESSAGE = (
+        "QUICKREPLY_BUTTON_MESSAGE",
+        OutputType.QUICKREPLY,
+        ActionType.MESSAGE,
+    )
+    QUICKREPLY_BUTTON_BLOCK = (
+        "QUICKREPLY_BUTTON_BLOCK",
+        OutputType.QUICKREPLY,
+        ActionType.BLOCK,
+    )
+
+    def __new__(cls, value: str, output_type: OutputType, action_type: ActionType):
+        """TriggerType 객체를 생성하는 메서드입니다.
+
+        Args:
+            value (str): 트리거 유형을 나타내는 문자열 (e.g., 'CARD_BUTTON_BLOCK')
+            output_type (OutputType): 출력 방식 (OutputType Enum)
+            action_type (ActionType): 동작 방식 (ActionType Enum)
+        """
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj.output_type = output_type
+        obj.action_type = action_type
+        return obj
+
+
+class Block(ParentPayload):
+    """flow의 lastBlock 및 trigger.referrerBlock 정보를 저장하는 클래스입니다.
+
+    이 클래스는 카카오 챗봇의 flow 필드 내 block 정보를 표현합니다. block 정보는
+    직전에 실행된 블록(lastBlock)이나 사용자가 상호작용한 블록(trigger.referrerBlock)의
+    id 및 name을 포함합니다.
+
+    Attributes:
+        id (str): 블록의 고유 식별자
+        name (str): 블록의 이름
+
+    Examples:
+        >>> block = Block.from_dict({"id": "block_id", "name": "block_name"})
+        >>> block.id
+        'block_id'
+        >>> block.name
+        'block_name'
+    """
+
+    def __init__(self, ID: str, name: str):
+        """Block 객체를 생성합니다.
+
+        Args:
+            ID (str): 블록의 고유 식별자
+            name (str): 블록 이름
+        """
+        self.id = ID
+        self.name = name
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "Block":
+        """딕셔너리에서 Block 객체를 생성합니다.
+
+        Args:
+            data (dict): 'id'와 'name' 키를 포함하는 블록 정보
+
+        Returns:
+            Block: 생성된 Block 객체
+        """
+        ID = data.get("id", "")
+        name = data.get("name", "")
+        return cls(ID, name)
+
+
+class Trigger(ParentPayload):
+    """flow의 trigger 정보를 저장하는 클래스입니다.
+
+    Trigger는 사용자의 발화를 발생시킨 트리거 정보를 담습니다.
+    여기에는 트리거의 유형(type: TriggerType)과 상호작용한 블록(referrerBlock)이 포함됩니다.
+
+    Attributes:
+        type (TriggerType): 발화를 발생시킨 트리거 유형 (OutputType + ActionType 조합)
+        referrer_block (Block): 사용자가 상호작용한 블록 정보
+
+    Examples:
+        >>> trigger = Trigger.from_dict({
+        ...     "type": "CARD_BUTTON_BLOCK",
+        ...     "referrerBlock": {
+        ...         "id": "ref_block_id",
+        ...         "name": "ref_block_name"
+        ...     }
+        ... })
+        >>> trigger.type.value
+        'CARD_BUTTON_BLOCK'
+        >>> trigger.type.output_type
+        <OutputType.CARD_BUTTON: 'CARD_BUTTON'>
+        >>> trigger.type.action_type
+        <ActionType.BLOCK: 'BLOCK'>
+        >>> trigger.referrer_block.id
+        'ref_block_id'
+    """
+
+    def __init__(self, TYPE: TriggerType, referrer_block: Block):
+        """Trigger 객체를 생성합니다.
+
+        Args:
+            TYPE (TriggerType): 트리거 유형
+            referrer_block (Block): 사용자가 상호작용한 참조 블록 정보
+        """
+        self.type = TYPE
+        self.referrer_block = referrer_block
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "Trigger":
+        """딕셔너리에서 Trigger 객체를 생성합니다.
+
+        Args:
+            data (dict): 'type'과 'referrerBlock'을 포함한 트리거 정보
+
+        Returns:
+            Trigger: 생성된 Trigger 객체
+
+        Raises:
+            InvalidPayloadError: 유효하지 않은 TriggerType인 경우
+        """
+        raw_type = data.get("type", "")
+        try:
+            trigger_type = TriggerType(raw_type)
+        except ValueError:
+            raise InvalidPayloadError(f"유효하지 않은 TriggerType: {raw_type}")
+        referrer_block = Block.from_dict(data.get("referrerBlock", {}))
+        return cls(trigger_type, referrer_block)
+
+
+class Flow(ParentPayload):
+    """Payload 객체의 'flow' 필드를 객체화한 클래스입니다.
+
+    flow는 사용자와 챗봇의 대화 흐름 정보를 담고 있으며,
+    트리거(trigger)와 마지막 블록(lastBlock)의 정보를 포함합니다.
+
+    Attributes:
+        trigger (Trigger): 발화를 발생시킨 트리거 정보
+        last_block (Block): 직전에 실행된 블록 정보
+
+    Example JSON:
+        {
+            "flow": {
+                "trigger": {
+                    "type": "CARD_BUTTON_BLOCK",
+                    "referrerBlock": {
+                        "id": "block_id",
+                        "name": "block_name"
+                    }
+                },
+                "lastBlock": {
+                    "id": "prev_block_id",
+                    "name": "prev_block_name"
+                }
+            }
+        }
+
+    Examples:
+        >>> flow = Flow.from_dict({
+        ...     "trigger": {
+        ...         "type": "CARD_BUTTON_BLOCK",
+        ...         "referrerBlock": {"id": "ref_block_id", "name": "ref_block_name"}
+        ...     },
+        ...     "lastBlock": {"id": "last_block_id", "name": "last_block_name"}
+        ... })
+        >>> flow.trigger.type
+        <TriggerType.CARD_BUTTON_BLOCK: 'CARD_BUTTON_BLOCK'>
+        >>> flow.trigger.type.output_type
+        <OutputType.CARD_BUTTON: 'CARD_BUTTON'>
+        >>> flow.trigger.type.action_type
+        <ActionType.BLOCK: 'BLOCK'>
+        >>> flow.last_block.name
+        'last_block_name'
+    """
+
+    def __init__(self, trigger: Trigger, last_block: Block):
+        """Flow 객체를 생성합니다.
+
+        Args:
+            trigger (Trigger): 발화를 유발한 트리거 정보
+            last_block (Block): 직전에 실행된 블록 정보
+        """
+        self.trigger = trigger
+        self.last_block = last_block
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "Flow":
+        """딕셔너리에서 Flow 객체를 생성합니다.
+
+        Args:
+            data (dict): 'trigger'와 'lastBlock' 정보를 포함하는 flow 데이터
+
+        Returns:
+            Flow: 생성된 Flow 객체
+        """
+        trigger = Trigger.from_dict(data.get("trigger", {}))
+        last_block = Block.from_dict(data.get("lastBlock", {}))
+        return cls(trigger, last_block)
 
 
 class ValidationPayload(ParentPayload):
