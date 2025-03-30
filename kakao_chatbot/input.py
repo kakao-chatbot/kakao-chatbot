@@ -922,7 +922,7 @@ class Payload(ParentPayload):
     """Payload 객체를 저장하는 클래스입니다.
 
     Payload 객체는 스킬 실행시 봇 시스템이 스킬 서버에게 전달하는 정보를 객체화한 것입니다.
-    이 클래스는 Intent, UserRequest, Bot, Action 객체를 속성으로 가지고 있습니다.
+    이 클래스는 Intent, UserRequest, Bot, Action, Flow 객체를 속성으로 가지고 있습니다.
     스킬 서버에서 전달받은 json 데이터 또는 dict 데이터를 곧바로 Payload 객체로 변환할 수 있습니다.
 
     Examples:
@@ -962,13 +962,24 @@ class Payload(ParentPayload):
         ...         "detailParams": {},
         ...         "clientExtra": {}
         ...     },
-        ...     "contexts": []
+        ...     "contexts": [],
+        ...     "flow": {
+        ...         "trigger": {
+        ...             "type": "CARD_BUTTON_BLOCK",
+        ...             "referrerBlock": {
+        ...                 "id": "ref_id",
+        ...                 "name": "ref_name"
+        ...             }
+        ...         },
+        ...         "lastBlock": {
+        ...             "id": "last_id",
+        ...             "name": "last_name"
+        ...         }
+        ...     }
         ... }
         >>> payload = Payload.from_dict(response_json)
-        >>> payload.intent.name
-        'intent_name'
-        >>> payload.user_request.utterance
-        '사용자 발화'
+        >>> payload.flow.trigger.type
+        <TriggerType.CARD_BUTTON_BLOCK: 'CARD_BUTTON_BLOCK'>
 
     Attributes:
         intent (Intent): 발화와 일치하는 블록이나 지식의 정보를 담고 있는 객체
@@ -976,6 +987,7 @@ class Payload(ParentPayload):
         bot (Bot): 봇 정보를 담고 있는 객체
         action (Action): 사용자의 요청에 대한 액션 정보를 담고 있는 객체
         contexts (list[Context]): 컨텍스트 정보를 담고 있는 객체 배열
+        flow (Flow): 사용자와 챗봇의 대화 흐름 정보를 담고 있는 객체
 
     Properties:
         user_id (str): 사용자의 ID == user_request.user.id
@@ -990,10 +1002,9 @@ class Payload(ParentPayload):
         bot: Bot,
         action: Action,
         contexts: Optional[List[Context]] = None,
+        flow: Optional[Flow] = None,
     ):
         """Payload 객체를 생성하는 메서드입니다.
-
-        context가 None인 경우 빈 딕셔너리로 초기화합니다.
 
         Args:
             intent (Intent): 발화와 일치하는 블록이나 지식의 정보를 담고 있는 객체
@@ -1001,11 +1012,13 @@ class Payload(ParentPayload):
             bot (Bot): 봇 정보를 담고 있는 객체
             action (Action): 사용자의 요청에 대한 액션 정보를 담고 있는 객체
             contexts (list[Context]): 컨텍스트 정보를 담고 있는 객체 배열
+            flow (Flow): 사용자와 챗봇의 대화 흐름 정보 객체
         """
         self.intent = intent
         self.user_request = user_request
         self.bot = bot
         self.action = action
+        self.flow = flow
         if contexts is None:
             contexts = []
         self.contexts = contexts
@@ -1026,14 +1039,9 @@ class Payload(ParentPayload):
         user_request = UserRequest.from_dict(data.get("userRequest", {}))
         bot = Bot.from_dict(data.get("bot", {}))
         action = Action.from_dict(data.get("action", {}))
+        flow = Flow.from_dict(data.get("flow", {})) if "flow" in data else None
         contexts = [Context.from_dict(context) for context in data.get("contexts", [])]
-        return cls(
-            intent=intent,
-            user_request=user_request,
-            bot=bot,
-            action=action,
-            contexts=contexts,
-        )
+        return cls(intent, user_request, bot, action, contexts, flow)
 
     @classmethod
     def from_json(cls, data: str) -> "Payload":
