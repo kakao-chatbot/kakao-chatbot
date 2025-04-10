@@ -589,85 +589,73 @@ class ActionType(str, Enum):
 
 
 class TriggerType(str, Enum):
-    """카카오 챗봇에서 사용자 발화를 발생시킨 트리거 유형입니다.
+    """사용자 발화를 유발한 트리거의 유형을 정의하는 Enum 클래스입니다.
 
-    TriggerType은 OutputType과 ActionType의 조합으로 구성되며,
-    실제 발화를 유발한 원인을 표현합니다.
+    TriggerType은 카카오 챗봇의 버튼, 리스트, 퀵리플라이 등의 사용자 인터페이스 요소와 관련된
+    입력 유형을 분류하며, 각 트리거는 고유 문자열 값을 갖습니다. 이 클래스는 각 트리거가
+    어떤 출력 방식(OutputType)과 동작 방식(ActionType)을 갖는지를 property를 통해 제공합니다.
 
-    각 항목은 다음 정보를 포함합니다:
-        - value: 문자열로 표현된 트리거 유형 (e.g., 'CARD_BUTTON_BLOCK')
-        - output_type: 출력 방식 (OutputType Enum)
-        - action_type: 동작 방식 (ActionType Enum)
+    이 클래스는 __OUTPUT_TYPE_MAP 및 __ACTION_TYPE_MAP이라는 정적 매핑을 사용하여
+    각 Enum 멤버의 output_type과 action_type을 효율적으로 참조합니다.
 
-    Examples:
+    Example:
         >>> t = TriggerType.CARD_BUTTON_BLOCK
-        >>> t.value
-        'CARD_BUTTON_BLOCK'
-        >>> t.output_type
-        <OutputType.CARD_BUTTON: 'CARD_BUTTON'>
-        >>> t.action_type
-        <ActionType.BLOCK: 'BLOCK'>
+        >>> print(t.value)
+        CARD_BUTTON_BLOCK
+        >>> print(t.output_type)
+        OutputType.CARD_BUTTON
+        >>> print(t.action_type)
+        ActionType.BLOCK
+
+        >>> TriggerType("LIST_ITEM_MESSAGE").output_type
+        OutputType.LIST_ITEM
+        >>> TriggerType("LIST_ITEM_MESSAGE").action_type
+        ActionType.MESSAGE
+
+    Raises:
+        ValueError: Enum 값이 매핑에 존재하지 않는 경우.
     """
+    TEXT_INPUT = "TEXT_INPUT"
+    CARD_BUTTON_MESSAGE = "CARD_BUTTON_MESSAGE"
+    CARD_BUTTON_BLOCK = "CARD_BUTTON_BLOCK"
+    LIST_ITEM_MESSAGE = "LIST_ITEM_MESSAGE"
+    LIST_ITEM_BLOCK = "LIST_ITEM_BLOCK"
+    LISTMENU_MESSAGE = "LISTMENU_MESSAGE"
+    LISTMENU_BLOCK = "LISTMENU_BLOCK"
+    QUICKREPLY_BUTTON_MESSAGE = "QUICKREPLY_BUTTON_MESSAGE"
+    QUICKREPLY_BUTTON_BLOCK = "QUICKREPLY_BUTTON_BLOCK"
 
-    TEXT_INPUT = (
-        "TEXT_INPUT",
-        OutputType.INPUT,
-        ActionType.TEXT,
-    )
-    CARD_BUTTON_MESSAGE = (
-        "CARD_BUTTON_MESSAGE",
-        OutputType.CARD_BUTTON,
-        ActionType.MESSAGE,
-    )
-    CARD_BUTTON_BLOCK = (
-        "CARD_BUTTON_BLOCK",
-        OutputType.CARD_BUTTON,
-        ActionType.BLOCK,
-    )
-    LIST_ITEM_MESSAGE = (
-        "LIST_ITEM_MESSAGE",
-        OutputType.LIST_ITEM,
-        ActionType.MESSAGE,
-    )
-    LIST_ITEM_BLOCK = (
-        "LIST_ITEM_BLOCK",
-        OutputType.LIST_ITEM,
-        ActionType.BLOCK,
-    )
-    LISTMENU_MESSAGE = (
-        "LISTMENU_MESSAGE",
-        OutputType.LISTMENU,
-        ActionType.MESSAGE,
-    )
-    LISTMENU_BLOCK = (
-        "LISTMENU_BLOCK",
-        OutputType.LISTMENU,
-        ActionType.BLOCK,
-    )
-    QUICKREPLY_BUTTON_MESSAGE = (
-        "QUICKREPLY_BUTTON_MESSAGE",
-        OutputType.QUICKREPLY,
-        ActionType.MESSAGE,
-    )
-    QUICKREPLY_BUTTON_BLOCK = (
-        "QUICKREPLY_BUTTON_BLOCK",
-        OutputType.QUICKREPLY,
-        ActionType.BLOCK,
-    )
+    __OUTPUT_TYPE_MAP: dict[str, OutputType] = {
+        "TEXT_INPUT": OutputType.INPUT,
+        "CARD_BUTTON_MESSAGE": OutputType.CARD_BUTTON,
+        "CARD_BUTTON_BLOCK": OutputType.CARD_BUTTON,
+        "LIST_ITEM_MESSAGE": OutputType.LIST_ITEM,
+        "LIST_ITEM_BLOCK": OutputType.LIST_ITEM,
+        "LISTMENU_MESSAGE": OutputType.LISTMENU,
+        "LISTMENU_BLOCK": OutputType.LISTMENU,
+        "QUICKREPLY_BUTTON_MESSAGE": OutputType.QUICKREPLY,
+        "QUICKREPLY_BUTTON_BLOCK": OutputType.QUICKREPLY,
+    }
 
-    def __new__(cls, value: str, output_type: OutputType, action_type: ActionType):
-        """TriggerType 객체를 생성하는 메서드입니다.
+    __ACTION_TYPE_MAP: dict[str, ActionType] = {
+        "TEXT_INPUT": ActionType.TEXT,
+        "CARD_BUTTON_MESSAGE": ActionType.MESSAGE,
+        "CARD_BUTTON_BLOCK": ActionType.BLOCK,
+        "LIST_ITEM_MESSAGE": ActionType.MESSAGE,
+        "LIST_ITEM_BLOCK": ActionType.BLOCK,
+        "LISTMENU_MESSAGE": ActionType.MESSAGE,
+        "LISTMENU_BLOCK": ActionType.BLOCK,
+        "QUICKREPLY_BUTTON_MESSAGE": ActionType.MESSAGE,
+        "QUICKREPLY_BUTTON_BLOCK": ActionType.BLOCK,
+    }
 
-        Args:
-            value (str): 트리거 유형을 나타내는 문자열 (e.g., 'CARD_BUTTON_BLOCK')
-            output_type (OutputType): 출력 방식 (OutputType Enum)
-            action_type (ActionType): 동작 방식 (ActionType Enum)
-        """
-        obj = str.__new__(cls, value)
-        obj._value_ = value
-        obj.output_type = output_type
-        obj.action_type = action_type
-        return obj
+    @property
+    def output_type(self) -> OutputType:
+        return self.__OUTPUT_TYPE_MAP[self.value]
+
+    @property
+    def action_type(self) -> ActionType:
+        return self.__ACTION_TYPE_MAP[self.value]
 
 
 class Block(ParentPayload):
@@ -766,10 +754,7 @@ class Trigger(ParentPayload):
             InvalidPayloadError: 유효하지 않은 TriggerType인 경우
         """
         raw_type = data.get("type", "")
-        try:
-            trigger_type = TriggerType(raw_type)
-        except ValueError:
-            raise InvalidPayloadError(f"유효하지 않은 TriggerType: {raw_type}")
+        trigger_type = TriggerType(raw_type)
         referrer_block = Block.from_dict(data.get("referrerBlock", {}))
         return cls(trigger_type, referrer_block)
 
@@ -1063,7 +1048,8 @@ class Payload(ParentPayload):
         user_request = UserRequest.from_dict(data.get("userRequest", {}))
         bot = Bot.from_dict(data.get("bot", {}))
         action = Action.from_dict(data.get("action", {}))
-        flow = Flow.from_dict(data.get("flow", {})) if "flow" in data else None
+        flow = Flow.from_dict(data.get("flow", {}))
+        # flow = data.get("flow", {})
         contexts = [Context.from_dict(context) for context in data.get("contexts", [])]
         return cls(intent, user_request, bot, action, contexts, flow)
 
