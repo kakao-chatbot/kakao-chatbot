@@ -615,6 +615,7 @@ class TriggerType(str, Enum):
     Raises:
         ValueError: Enum 값이 매핑에 존재하지 않는 경우.
     """
+
     TEXT_INPUT = "TEXT_INPUT"
     CARD_BUTTON_MESSAGE = "CARD_BUTTON_MESSAGE"
     CARD_BUTTON_BLOCK = "CARD_BUTTON_BLOCK"
@@ -651,10 +652,34 @@ class TriggerType(str, Enum):
 
     @property
     def output_type(self) -> OutputType:
+        """TriggerType의 출력 유형을 반환합니다.
+
+        이 메서드는 TriggerType Enum 멤버에 해당하는 출력 유형을 반환합니다.
+        예를 들어, TriggerType.CARD_BUTTON_BLOCK은 OutputType.CARD_BUTTON을 반환합니다.
+        만약 Enum 값이 매핑에 존재하지 않는 경우, ValueError를 발생시킵니다.
+
+        Returns:
+            OutputType: TriggerType에 해당하는 출력 유형입니다.
+
+        Raises:
+            ValueError: Enum 값이 매핑에 존재하지 않는 경우.
+        """
         return self.__OUTPUT_TYPE_MAP[self.value]
 
     @property
     def action_type(self) -> ActionType:
+        """TriggerType의 동작 유형을 반환합니다.
+
+        이 메서드는 TriggerType Enum 멤버에 해당하는 동작 유형을 반환합니다.
+        예를 들어, TriggerType.CARD_BUTTON_BLOCK은 ActionType.BLOCK을 반환합니다.
+        만약 Enum 값이 매핑에 존재하지 않는 경우, ValueError를 발생시킵니다.
+
+        Returns:
+            ActionType: TriggerType에 해당하는 동작 유형입니다.
+
+        Raises:
+            ValueError: Enum 값이 매핑에 존재하지 않는 경우.
+        """
         return self.__ACTION_TYPE_MAP[self.value]
 
 
