@@ -16,6 +16,7 @@ classes:
 """
 
 import json
+from enum import Enum
 from typing import Optional, Union, List, Dict
 
 from .base import ParentPayload
@@ -175,7 +176,7 @@ class Action(ParentPayload):
             key: Param.from_dict(value)
             for key, value in data.get("detailParams", {}).items()
         }
-        client_extra = data["clientExtra"]
+        client_extra = data.get("clientExtra", {})
         return cls(
             ID=ID,
             name=name,
@@ -296,9 +297,9 @@ class IntentExtra(ParentPayload):
     """
 
     def __init__(
-          self,
-          reason: Optional[dict] = None,
-          matched_knowledges: Optional[list[Knowledge]] = None
+        self,
+        reason: Optional[dict] = None,
+        matched_knowledges: Optional[list[Knowledge]] = None,
     ):
         """IntentExtra 클래스의 인스턴스를 초기화합니다.
 
@@ -448,7 +449,7 @@ class User(ParentPayload):
         self,
         ID: str,
         TYPE: str,
-        properties: UserProperties = None,
+        properties: Optional[UserProperties] = None,
     ):
         """User 객체를 생성하는 메서드입니다.
 
@@ -553,6 +554,306 @@ class UserRequest(ParentPayload):
         )
 
 
+class OutputType(str, Enum):
+    """카카오 챗봇 트리거의 출력 유형입니다.
+
+    챗봇 구성 요소에서 사용자 입력 또는 버튼/카드 등의 출력 방식에 해당합니다.
+
+    - INPUT: 일반 텍스트 입력
+    - CARD_BUTTON: 일반 카드 버튼
+    - LIST_ITEM: 리스트 카드 항목
+    - LISTMENU: 리스트 메뉴 버튼
+    - QUICKREPLY: 바로연결 버튼
+    """
+
+    INPUT = "INPUT"
+    CARD_BUTTON = "CARD_BUTTON"
+    LIST_ITEM = "LIST_ITEM"
+    LISTMENU = "LISTMENU"
+    QUICKREPLY = "QUICKREPLY"
+
+
+class ActionType(str, Enum):
+    """카카오 챗봇 트리거의 동작 유형입니다.
+
+    버튼 클릭 또는 입력 후 실행되는 동작의 목적에 해당합니다.
+
+    - TEXT: 사용자의 텍스트 입력
+    - MESSAGE: 메시지 전송
+    - BLOCK: 다른 블록 호출
+    """
+
+    TEXT = "TEXT"
+    MESSAGE = "MESSAGE"
+    BLOCK = "BLOCK"
+
+
+class TriggerType(str, Enum):
+    """사용자 발화를 유발한 트리거의 유형을 정의하는 Enum 클래스입니다.
+
+    TriggerType은 카카오 챗봇의 버튼, 리스트, 퀵리플라이 등의 사용자 인터페이스 요소와 관련된
+    입력 유형을 분류하며, 각 트리거는 고유 문자열 값을 갖습니다. 이 클래스는 각 트리거가
+    어떤 출력 방식(OutputType)과 동작 방식(ActionType)을 갖는지를 property를 통해 제공합니다.
+
+    이 클래스는 __OUTPUT_TYPE_MAP 및 __ACTION_TYPE_MAP이라는 정적 매핑을 사용하여
+    각 Enum 멤버의 output_type과 action_type을 효율적으로 참조합니다.
+
+    Example:
+        >>> t = TriggerType.CARD_BUTTON_BLOCK
+        >>> print(t.value)
+        CARD_BUTTON_BLOCK
+        >>> print(t.output_type)
+        OutputType.CARD_BUTTON
+        >>> print(t.action_type)
+        ActionType.BLOCK
+
+        >>> TriggerType("LIST_ITEM_MESSAGE").output_type
+        OutputType.LIST_ITEM
+        >>> TriggerType("LIST_ITEM_MESSAGE").action_type
+        ActionType.MESSAGE
+
+    Raises:
+        ValueError: Enum 값이 매핑에 존재하지 않는 경우.
+    """
+
+    TEXT_INPUT = "TEXT_INPUT"
+    CARD_BUTTON_MESSAGE = "CARD_BUTTON_MESSAGE"
+    CARD_BUTTON_BLOCK = "CARD_BUTTON_BLOCK"
+    LIST_ITEM_MESSAGE = "LIST_ITEM_MESSAGE"
+    LIST_ITEM_BLOCK = "LIST_ITEM_BLOCK"
+    LISTMENU_MESSAGE = "LISTMENU_MESSAGE"
+    LISTMENU_BLOCK = "LISTMENU_BLOCK"
+    QUICKREPLY_BUTTON_MESSAGE = "QUICKREPLY_BUTTON_MESSAGE"
+    QUICKREPLY_BUTTON_BLOCK = "QUICKREPLY_BUTTON_BLOCK"
+
+    __OUTPUT_TYPE_MAP: dict[str, OutputType] = {
+        "TEXT_INPUT": OutputType.INPUT,
+        "CARD_BUTTON_MESSAGE": OutputType.CARD_BUTTON,
+        "CARD_BUTTON_BLOCK": OutputType.CARD_BUTTON,
+        "LIST_ITEM_MESSAGE": OutputType.LIST_ITEM,
+        "LIST_ITEM_BLOCK": OutputType.LIST_ITEM,
+        "LISTMENU_MESSAGE": OutputType.LISTMENU,
+        "LISTMENU_BLOCK": OutputType.LISTMENU,
+        "QUICKREPLY_BUTTON_MESSAGE": OutputType.QUICKREPLY,
+        "QUICKREPLY_BUTTON_BLOCK": OutputType.QUICKREPLY,
+    }
+
+    __ACTION_TYPE_MAP: dict[str, ActionType] = {
+        "TEXT_INPUT": ActionType.TEXT,
+        "CARD_BUTTON_MESSAGE": ActionType.MESSAGE,
+        "CARD_BUTTON_BLOCK": ActionType.BLOCK,
+        "LIST_ITEM_MESSAGE": ActionType.MESSAGE,
+        "LIST_ITEM_BLOCK": ActionType.BLOCK,
+        "LISTMENU_MESSAGE": ActionType.MESSAGE,
+        "LISTMENU_BLOCK": ActionType.BLOCK,
+        "QUICKREPLY_BUTTON_MESSAGE": ActionType.MESSAGE,
+        "QUICKREPLY_BUTTON_BLOCK": ActionType.BLOCK,
+    }
+
+    @property
+    def output_type(self) -> OutputType:
+        """TriggerType의 출력 유형을 반환합니다.
+
+        이 메서드는 TriggerType Enum 멤버에 해당하는 출력 유형을 반환합니다.
+        예를 들어, TriggerType.CARD_BUTTON_BLOCK은 OutputType.CARD_BUTTON을 반환합니다.
+        만약 Enum 값이 매핑에 존재하지 않는 경우, ValueError를 발생시킵니다.
+
+        Returns:
+            OutputType: TriggerType에 해당하는 출력 유형입니다.
+
+        Raises:
+            ValueError: Enum 값이 매핑에 존재하지 않는 경우.
+        """
+        return self.__OUTPUT_TYPE_MAP[self.value]
+
+    @property
+    def action_type(self) -> ActionType:
+        """TriggerType의 동작 유형을 반환합니다.
+
+        이 메서드는 TriggerType Enum 멤버에 해당하는 동작 유형을 반환합니다.
+        예를 들어, TriggerType.CARD_BUTTON_BLOCK은 ActionType.BLOCK을 반환합니다.
+        만약 Enum 값이 매핑에 존재하지 않는 경우, ValueError를 발생시킵니다.
+
+        Returns:
+            ActionType: TriggerType에 해당하는 동작 유형입니다.
+
+        Raises:
+            ValueError: Enum 값이 매핑에 존재하지 않는 경우.
+        """
+        return self.__ACTION_TYPE_MAP[self.value]
+
+
+class Block(ParentPayload):
+    """flow의 lastBlock 및 trigger.referrerBlock 정보를 저장하는 클래스입니다.
+
+    이 클래스는 카카오 챗봇의 flow 필드 내 block 정보를 표현합니다. block 정보는
+    직전에 실행된 블록(lastBlock)이나 사용자가 상호작용한 블록(trigger.referrerBlock)의
+    id 및 name을 포함합니다.
+
+    Attributes:
+        id (str): 블록의 고유 식별자
+        name (str): 블록의 이름
+
+    Examples:
+        >>> block = Block.from_dict({"id": "block_id", "name": "block_name"})
+        >>> block.id
+        'block_id'
+        >>> block.name
+        'block_name'
+    """
+
+    def __init__(self, ID: str, name: str):
+        """Block 객체를 생성합니다.
+
+        Args:
+            ID (str): 블록의 고유 식별자
+            name (str): 블록 이름
+        """
+        self.id = ID
+        self.name = name
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "Block":
+        """딕셔너리에서 Block 객체를 생성합니다.
+
+        Args:
+            data (dict): 'id'와 'name' 키를 포함하는 블록 정보
+
+        Returns:
+            Block: 생성된 Block 객체
+        """
+        ID = data.get("id", "")
+        name = data.get("name", "")
+        return cls(ID, name)
+
+
+class Trigger(ParentPayload):
+    """flow의 trigger 정보를 저장하는 클래스입니다.
+
+    Trigger는 사용자의 발화를 발생시킨 트리거 정보를 담습니다.
+    여기에는 트리거의 유형(type: TriggerType)과 상호작용한 블록(referrerBlock)이 포함됩니다.
+
+    Attributes:
+        type (TriggerType): 발화를 발생시킨 트리거 유형 (OutputType + ActionType 조합)
+        referrer_block (Block): 사용자가 상호작용한 블록 정보
+
+    Examples:
+        >>> trigger = Trigger.from_dict({
+        ...     "type": "CARD_BUTTON_BLOCK",
+        ...     "referrerBlock": {
+        ...         "id": "ref_block_id",
+        ...         "name": "ref_block_name"
+        ...     }
+        ... })
+        >>> trigger.type.value
+        'CARD_BUTTON_BLOCK'
+        >>> trigger.type.output_type
+        <OutputType.CARD_BUTTON: 'CARD_BUTTON'>
+        >>> trigger.type.action_type
+        <ActionType.BLOCK: 'BLOCK'>
+        >>> trigger.referrer_block.id
+        'ref_block_id'
+    """
+
+    def __init__(self, TYPE: TriggerType, referrer_block: Block):
+        """Trigger 객체를 생성합니다.
+
+        Args:
+            TYPE (TriggerType): 트리거 유형
+            referrer_block (Block): 사용자가 상호작용한 참조 블록 정보
+        """
+        self.type = TYPE
+        self.referrer_block = referrer_block
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "Trigger":
+        """딕셔너리에서 Trigger 객체를 생성합니다.
+
+        Args:
+            data (dict): 'type'과 'referrerBlock'을 포함한 트리거 정보
+
+        Returns:
+            Trigger: 생성된 Trigger 객체
+
+        Raises:
+            InvalidPayloadError: 유효하지 않은 TriggerType인 경우
+        """
+        raw_type = data.get("type", "")
+        trigger_type = TriggerType(raw_type)
+        referrer_block = Block.from_dict(data.get("referrerBlock", {}))
+        return cls(trigger_type, referrer_block)
+
+
+class Flow(ParentPayload):
+    """Payload 객체의 'flow' 필드를 객체화한 클래스입니다.
+
+    flow는 사용자와 챗봇의 대화 흐름 정보를 담고 있으며,
+    트리거(trigger)와 마지막 블록(lastBlock)의 정보를 포함합니다.
+
+    Attributes:
+        trigger (Trigger): 발화를 발생시킨 트리거 정보
+        last_block (Block): 직전에 실행된 블록 정보
+
+    Example JSON:
+        {
+            "flow": {
+                "trigger": {
+                    "type": "CARD_BUTTON_BLOCK",
+                    "referrerBlock": {
+                        "id": "block_id",
+                        "name": "block_name"
+                    }
+                },
+                "lastBlock": {
+                    "id": "prev_block_id",
+                    "name": "prev_block_name"
+                }
+            }
+        }
+
+    Examples:
+        >>> flow = Flow.from_dict({
+        ...     "trigger": {
+        ...         "type": "CARD_BUTTON_BLOCK",
+        ...         "referrerBlock": {"id": "ref_block_id", "name": "ref_block_name"}
+        ...     },
+        ...     "lastBlock": {"id": "last_block_id", "name": "last_block_name"}
+        ... })
+        >>> flow.trigger.type
+        <TriggerType.CARD_BUTTON_BLOCK: 'CARD_BUTTON_BLOCK'>
+        >>> flow.trigger.type.output_type
+        <OutputType.CARD_BUTTON: 'CARD_BUTTON'>
+        >>> flow.trigger.type.action_type
+        <ActionType.BLOCK: 'BLOCK'>
+        >>> flow.last_block.name
+        'last_block_name'
+    """
+
+    def __init__(self, trigger: Trigger, last_block: Block):
+        """Flow 객체를 생성합니다.
+
+        Args:
+            trigger (Trigger): 발화를 유발한 트리거 정보
+            last_block (Block): 직전에 실행된 블록 정보
+        """
+        self.trigger = trigger
+        self.last_block = last_block
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "Flow":
+        """딕셔너리에서 Flow 객체를 생성합니다.
+
+        Args:
+            data (dict): 'trigger'와 'lastBlock' 정보를 포함하는 flow 데이터
+
+        Returns:
+            Flow: 생성된 Flow 객체
+        """
+        trigger = Trigger.from_dict(data.get("trigger", {}))
+        last_block = Block.from_dict(data.get("lastBlock", {}))
+        return cls(trigger, last_block)
+
+
 class ValidationPayload(ParentPayload):
     """ValidationPayload 객체를 저장하는 클래스입니다.
 
@@ -655,7 +956,7 @@ class Payload(ParentPayload):
     """Payload 객체를 저장하는 클래스입니다.
 
     Payload 객체는 스킬 실행시 봇 시스템이 스킬 서버에게 전달하는 정보를 객체화한 것입니다.
-    이 클래스는 Intent, UserRequest, Bot, Action 객체를 속성으로 가지고 있습니다.
+    이 클래스는 Intent, UserRequest, Bot, Action, Flow 객체를 속성으로 가지고 있습니다.
     스킬 서버에서 전달받은 json 데이터 또는 dict 데이터를 곧바로 Payload 객체로 변환할 수 있습니다.
 
     Examples:
@@ -695,13 +996,24 @@ class Payload(ParentPayload):
         ...         "detailParams": {},
         ...         "clientExtra": {}
         ...     },
-        ...     "contexts": []
+        ...     "contexts": [],
+        ...     "flow": {
+        ...         "trigger": {
+        ...             "type": "CARD_BUTTON_BLOCK",
+        ...             "referrerBlock": {
+        ...                 "id": "ref_id",
+        ...                 "name": "ref_name"
+        ...             }
+        ...         },
+        ...         "lastBlock": {
+        ...             "id": "last_id",
+        ...             "name": "last_name"
+        ...         }
+        ...     }
         ... }
         >>> payload = Payload.from_dict(response_json)
-        >>> payload.intent.name
-        'intent_name'
-        >>> payload.user_request.utterance
-        '사용자 발화'
+        >>> payload.flow.trigger.type
+        <TriggerType.CARD_BUTTON_BLOCK: 'CARD_BUTTON_BLOCK'>
 
     Attributes:
         intent (Intent): 발화와 일치하는 블록이나 지식의 정보를 담고 있는 객체
@@ -709,6 +1021,7 @@ class Payload(ParentPayload):
         bot (Bot): 봇 정보를 담고 있는 객체
         action (Action): 사용자의 요청에 대한 액션 정보를 담고 있는 객체
         contexts (list[Context]): 컨텍스트 정보를 담고 있는 객체 배열
+        flow (Flow): 사용자와 챗봇의 대화 흐름 정보를 담고 있는 객체
 
     Properties:
         user_id (str): 사용자의 ID == user_request.user.id
@@ -723,10 +1036,9 @@ class Payload(ParentPayload):
         bot: Bot,
         action: Action,
         contexts: Optional[List[Context]] = None,
+        flow: Optional[Flow] = None,
     ):
         """Payload 객체를 생성하는 메서드입니다.
-
-        context가 None인 경우 빈 딕셔너리로 초기화합니다.
 
         Args:
             intent (Intent): 발화와 일치하는 블록이나 지식의 정보를 담고 있는 객체
@@ -734,11 +1046,13 @@ class Payload(ParentPayload):
             bot (Bot): 봇 정보를 담고 있는 객체
             action (Action): 사용자의 요청에 대한 액션 정보를 담고 있는 객체
             contexts (list[Context]): 컨텍스트 정보를 담고 있는 객체 배열
+            flow (Flow): 사용자와 챗봇의 대화 흐름 정보 객체
         """
         self.intent = intent
         self.user_request = user_request
         self.bot = bot
         self.action = action
+        self.flow = flow
         if contexts is None:
             contexts = []
         self.contexts = contexts
@@ -759,14 +1073,10 @@ class Payload(ParentPayload):
         user_request = UserRequest.from_dict(data.get("userRequest", {}))
         bot = Bot.from_dict(data.get("bot", {}))
         action = Action.from_dict(data.get("action", {}))
+        flow = Flow.from_dict(data.get("flow", {}))
+        # flow = data.get("flow", {})
         contexts = [Context.from_dict(context) for context in data.get("contexts", [])]
-        return cls(
-            intent=intent,
-            user_request=user_request,
-            bot=bot,
-            action=action,
-            contexts=contexts,
-        )
+        return cls(intent, user_request, bot, action, contexts, flow)
 
     @classmethod
     def from_json(cls, data: str) -> "Payload":

@@ -76,7 +76,7 @@ class ParentCardComponent(ParentComponent, metaclass=ABCMeta):
         message_text: Optional[str] = None,
         phone_number: Optional[str] = None,
         block_id: Optional[str] = None,
-        extra: Optional[Dict] = None
+        extra: Optional[Dict] = None,
     ) -> "ParentCardComponent": ...
 
     def add_button(self, *args, **kwargs) -> "ParentCardComponent":
@@ -654,7 +654,7 @@ class ListCardComponent(ParentCardComponent):
         action: Optional[Union[str, ActionEnum]] = None,
         block_id: Optional[str] = None,
         message_text: Optional[str] = None,
-        extra: Optional[Dict] = None
+        extra: Optional[Dict] = None,
     ) -> "ListCardComponent": ...
 
     @overload
