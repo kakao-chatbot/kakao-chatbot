@@ -449,7 +449,7 @@ class User(ParentPayload):
         self,
         ID: str,
         TYPE: str,
-        properties: UserProperties = None,
+        properties: Optional[UserProperties] = None,
     ):
         """User 객체를 생성하는 메서드입니다.
 

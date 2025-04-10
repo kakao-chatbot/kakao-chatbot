@@ -181,7 +181,7 @@ class ContextParam(ParentPayload, SkillTemplate):
         self.resolved_value = resolved_value
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'ContextParam':
+    def from_dict(cls, data: dict) -> "ContextParam":
         """딕셔너리를 ContextParam 객체로 변환합니다.
 
         변환할 딕셔너리는 다음과 같은 형태입니다.
