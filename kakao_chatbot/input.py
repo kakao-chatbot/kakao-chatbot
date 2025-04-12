@@ -778,6 +778,8 @@ class Trigger(ParentPayload):
         Raises:
             InvalidPayloadError: 유효하지 않은 TriggerType인 경우
         """
+        if not data:
+            return None
         raw_type = data.get("type", "")
         trigger_type = TriggerType(raw_type)
         referrer_block = Block.from_dict(data.get("referrerBlock", {}))
@@ -1074,7 +1076,6 @@ class Payload(ParentPayload):
         bot = Bot.from_dict(data.get("bot", {}))
         action = Action.from_dict(data.get("action", {}))
         flow = Flow.from_dict(data.get("flow", {}))
-        # flow = data.get("flow", {})
         contexts = [Context.from_dict(context) for context in data.get("contexts", [])]
         return cls(intent, user_request, bot, action, contexts, flow)
 
