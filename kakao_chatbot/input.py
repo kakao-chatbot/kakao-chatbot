@@ -434,7 +434,7 @@ class User(ParentPayload):
     Attributes:
         id (str): 사용자를 식별할 수 있는 key로 최대 70자의 값
         type (str): 현재는 botUserKey만 제공
-        properties (dict): 추가적으로 제공하는 사용자의 속성 정보
+        properties (UserProperties): 추가적으로 제공하는 사용자의 속성 정보
 
     Examples:
     >>> User('user_id', 'botUserKey')
@@ -451,12 +451,9 @@ class User(ParentPayload):
         TYPE: str,
         properties: Optional[UserProperties] = None,
     ):
-        """User 객체를 생성하는 메서드입니다.
-
-        properties가 None인 경우 빈 딕셔너리로 초기화합니다.
-        """
+        """User 객체를 생성하는 메서드입니다."""
         if properties is None:
-            properties = {}
+            properties = UserProperties("", "")
 
         self.id = ID
         self.type = TYPE
