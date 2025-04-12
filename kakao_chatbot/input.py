@@ -798,7 +798,7 @@ class Trigger(ParentPayload):
         raw_type = data.get("type", "")
         trigger_type = TriggerType.safe_from(raw_type)
         if trigger_type is None:
-            return None  # Flow는 optional이므로 None 반환 허용
+            return None
 
         referrer_block = Block.from_dict(data.get("referrerBlock", {}))
         return cls(trigger_type, referrer_block)
