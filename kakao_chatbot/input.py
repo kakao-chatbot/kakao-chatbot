@@ -434,7 +434,7 @@ class User(ParentPayload):
     Attributes:
         id (str): 사용자를 식별할 수 있는 key로 최대 70자의 값
         type (str): 현재는 botUserKey만 제공
-        properties (dict): 추가적으로 제공하는 사용자의 속성 정보
+        properties (UserProperties): 추가적으로 제공하는 사용자의 속성 정보
 
     Examples:
     >>> User('user_id', 'botUserKey')
@@ -451,12 +451,9 @@ class User(ParentPayload):
         TYPE: str,
         properties: Optional[UserProperties] = None,
     ):
-        """User 객체를 생성하는 메서드입니다.
-
-        properties가 None인 경우 빈 딕셔너리로 초기화합니다.
-        """
+        """User 객체를 생성하는 메서드입니다."""
         if properties is None:
-            properties = {}
+            properties = UserProperties("", "")
 
         self.id = ID
         self.type = TYPE
@@ -683,11 +680,11 @@ class TriggerType(str, Enum):
         return self.__ACTION_TYPE_MAP[self.value]
 
     @classmethod
-    def safe_from(cls, value: str) -> "TriggerType":
+    def safe_from(cls, value: str) -> Optional["TriggerType"]:
         """TriggerType을 안전하게 생성합니다.
 
         주어진 문자열 값에 해당하는 TriggerType을 반환합니다. 만약 값이 유효하지 않으면
-        InvalidPayloadError를 발생시킵니다. 이 메서드는 Enum의 생성자 대신 사용됩니다.
+        None을 반환합니다. 이 메서드는 Enum의 생성자 대신 사용됩니다.
 
         Args:
             value (str): TriggerType의 문자열 값
@@ -698,8 +695,8 @@ class TriggerType(str, Enum):
         Returns:
             TriggerType: TriggerType Enum 멤버
         """
-        if value not in cls._value2member_map_:
-            raise InvalidPayloadError(f"Invalid TriggerType: '{value}'")
+        if not value or value not in cls._value2member_map_:
+            return None
         return cls(value)
 
 
@@ -786,7 +783,7 @@ class Trigger(ParentPayload):
         self.referrer_block = referrer_block
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "Trigger":
+    def from_dict(cls, data: Dict) -> Optional["Trigger"]:
         """딕셔너리에서 Trigger 객체를 생성합니다.
 
         Args:
@@ -800,6 +797,9 @@ class Trigger(ParentPayload):
         """
         raw_type = data.get("type", "")
         trigger_type = TriggerType.safe_from(raw_type)
+        if trigger_type is None:
+            return None
+
         referrer_block = Block.from_dict(data.get("referrerBlock", {}))
         return cls(trigger_type, referrer_block)
 
